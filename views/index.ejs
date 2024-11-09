@@ -1,88 +1,152 @@
 <%- include('partials/header') %>
 
+<%
+  function generatePaginationUrl(pageNumber) {
+    return `/results?url=${encodeURIComponent(url)}&n=${n}&page=${pageNumber}&limit=${limit}`;
+  }
+%>
+
 <div class="page-wrap">
-    <div class="container my-5">
-        <div class="row justify-content-center">
-            <div class="col-md-10 col-lg-8">
-                <h1 class="text-center mb-4">Top N Words Finder</h1>
-
-                <% if (error) { %>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <%= error %>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <% } %>
-
-                <form id="wordForm" class="bg-white p-4 rounded shadow needs-validation" action="/top-words" method="POST" novalidate>
-                    <div class="mb-3">
-                        <label for="urlInput" class="form-label">Web Page URL</label>
-                        <input 
-                            type="url" 
-                            class="form-control" 
-                            id="urlInput" 
-                            name="url" 
-                            placeholder="https://www.example.com"
-                            value="<%= url %>"
-                            required
-                        >
-                        <div class="invalid-feedback">
-                            Please provide a valid URL.
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="nInput" class="form-label">Number of Top Words (N)</label>
-                        <input 
-                            type="number" 
-                            class="form-control" 
-                            id="nInput" 
-                            name="n" 
-                            value="<%= n || 10 %>" 
-                            min="1" 
-                            required
-                        >
-                        <div class="invalid-feedback">
-                            Please provide a valid number.
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Get Top Words</button>
-                </form>
-
-                <!-- Loading Spinner -->
-                <div id="loadingSpinner" class="text-center my-4" style="display: none;">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Fetching and processing data...</p>
-                </div>
-
-                <% if (words && words.length > 0) { %>
-                    <div class="mt-5">
-                        <h2 class="mb-3">Top <%= words.length %> Words</h2>
-                        <div class="table-responsive">
-                            <table class="table table-hover table-bordered">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th scope="col">#</th>
-                                        <th scope="col">Word</th>
-                                        <th scope="col">Frequency</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% words.forEach((word, index) => { %>
-                                        <tr>
-                                            <th scope="row"><%= index + 1 %></th>
-                                            <td><%= word.word %></td>
-                                            <td><%= word.freq %></td>
-                                        </tr>
-                                    <% }); %>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                <% } %>
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-10 col-lg-8">
+        <!-- Flash Messages -->
+        <% if (error && error.length > 0) { %>
+          <% error.forEach(function(msg) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <%= msg %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
+          <% }); %>
+        <% } %>
+
+        <% if (success && success.length > 0) { %>
+          <% success.forEach(function(msg) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <%= msg %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% }); %>
+        <% } %>
+
+        <% if (notice && notice.length > 0) { %>
+          <% notice.forEach(function(msg) { %>
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+              <%= msg %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% }); %>
+        <% } %>
+
+       
+
+        <h1 class="text-center mb-4">Top N Words Finder</h1>
+
+        <form id="wordForm" class="bg-white p-4 rounded shadow needs-validation" action="/top-words" method="POST" novalidate>
+          <div class="mb-3">
+            <label for="urlInput" class="form-label">Web Page URL</label>
+            <input type="url" class="form-control" id="urlInput" name="url" placeholder="https://www.example.com" value="<%= url %>" required>
+            <div class="invalid-feedback">
+              Please provide a valid URL.
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="nInput" class="form-label">Number of Top Words (N)</label>
+            <input type="number" class="form-control" id="nInput" name="n" value="<%= n || 10 %>" min="1" required>
+            <div class="invalid-feedback">
+              Please provide a valid number.
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100" id="submitButton">Get Top Words</button>
+        </form>
+
+         <!-- Loading Spinner -->
+         <div id="loadingSpinner" class="text-center my-3" style="display: none;">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Fetching Data...</span>
+          </div>
         </div>
+
+        <% if (words && words.length > 0) { %>
+          <div class="mt-5">
+            <h2 class="mb-3">Top <%= words.length %> Words</h2>
+            <div class="table-responsive">
+              <table class="table table-hover table-bordered">
+                <thead class="table-dark">
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Word</th>
+                    <th scope="col">Frequency</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% words.forEach((word, index) => { %>
+                    <tr>
+                      <th scope="row"><%= index + 1 + (currentPage - 1) * limit %></th>
+                      <td><%= word.word %></td>
+                      <td><%= word.freq %></td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Pagination Controls -->
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+              <% if (currentPage > 1) { %>
+                <li class="page-item">
+                  <a class="page-link" href="<%= generatePaginationUrl(currentPage - 1) %>">Previous</a>
+                </li>
+              <% } %>
+
+              <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                  <a class="page-link" href="<%= generatePaginationUrl(i) %>"><%= i %></a>
+                </li>
+              <% } %>
+
+              <% if (currentPage < totalPages) { %>
+                <li class="page-item">
+                  <a class="page-link" href="<%= generatePaginationUrl(currentPage + 1) %>">Next</a>
+                </li>
+              <% } %>
+            </ul>
+          </nav>
+        <% } %>
+      </div>
     </div>
+  </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('wordForm');
+    const submitButton = document.getElementById('submitButton');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+
+    if (form) {
+      form.addEventListener('submit', function(event) {
+        // Disable the submit button
+        submitButton.disabled = true;
+        // Show the loading spinner
+        loadingSpinner.style.display = 'block';
+      });
+    }
+
+    // Pagination link click handler
+    const paginationLinks = document.querySelectorAll('.pagination .page-link');
+    paginationLinks.forEach(function(link) {
+      link.addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent the default action
+        // Show the loading spinner
+        loadingSpinner.style.display = 'block';
+        // Navigate to the link's href
+        window.location.href = this.href;
+      });
+    });
+  });
+</script>
 
 <%- include('partials/footer') %>

@@ -1,19 +1,24 @@
-const express = require("express");
+// errorHandler.js
+
 const logger = require("../config/logger");
 
-const router = express.Router();
+// 404 Not Found Handler
+function notFoundHandler(req, res, next) {
+  logger.warn(`404 Not Found: ${req.originalUrl}`);
+  res.status(404).render("404", {
+    error: "The page you are looking for does not exist.",
+  });
+}
 
-// 404 Handler
-router.use((req, res) => {
-  req.flash("error_msg", "Page Not Found");
-  res.redirect("/");
-});
-
-// Global Error Handler
-router.use((err, req, res, next) => {
+// General Error Handler
+function errorHandler(err, req, res, next) {
   logger.error(`Unhandled Error: ${err.message}`);
-  req.flash("error_msg", "Internal Server Error");
-  res.redirect("/");
-});
+  res.status(500).render("500", {
+    error: "An internal server error occurred.",
+  });
+}
 
-module.exports = router;
+module.exports = {
+  notFoundHandler,
+  errorHandler,
+};
