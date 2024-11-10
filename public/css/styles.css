@@ -1,13 +1,15 @@
 /* Reset and Basic Layout */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-html, body {
+html,
+body {
     height: 100%;
-    margin: 0;
     display: flex;
     flex-direction: column;
 }
@@ -16,51 +18,60 @@ html, body {
     flex: 1;
 }
 
-/* Footer Styles */
-.footer-custom {
-    background-color: #2d3142;
-    color: #e0e5ec;
-    text-align: center;
-    padding: 10px 0;
-    font-size: 0.9rem;
-    width: 100%;
-    position: relative;
-    bottom: 0;
-}
-
+/* Container Padding */
 .container {
     padding: 20px;
 }
 
+/* Footer Styles */
+.footer-custom {
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.9rem;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    bottom: 0;
+    left: 0;
+}
+
+
 /* Navbar Styling */
 .navbar-custom {
-    background-color: #2d3142; 
+    background-color: #2d3142;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-custom .navbar-brand {
     font-weight: 700;
-    color: #e0e5ec; 
-    border: 1px solid #ced4da ;
+    color: #e0e5ec;
 }
 
 .navbar-custom .navbar-brand:hover {
     color: #a8d0e6;
 }
 
-/* Form and table customizations */
+/* Form Customizations */
 .custom-form {
-    background-color: #ffffff;
+    background-color: #fff;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    text-align: left;
 }
 
 .custom-form .form-label {
     font-weight: 600;
     color: #333;
     margin-bottom: 6px;
-    display: block;
 }
 
 .custom-form .form-control {
@@ -68,7 +79,6 @@ html, body {
     border-radius: 8px;
     padding: 10px;
     font-size: 1rem;
-    width: 100%;
     transition: border-color 0.3s ease;
 }
 
@@ -97,7 +107,7 @@ html, body {
 
 .custom-form .btn-primary:active {
     background-color: #2c7873;
-    transform: scale(1.0);
+    transform: scale(1);
 }
 
 /* Alert Styles */
@@ -113,27 +123,26 @@ html, body {
 
 /* Table Styles */
 .table-custom {
-    background-color: #ffffff;
+    background-color: #e2d2d2;
     border-radius: 8px;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.08);
     width: 100%;
 }
 
-.table-custom th, .table-custom td {
-    vertical-align: middle;
-    font-weight: 500;
+.table-custom th,
+.table-custom td {
     padding: 16px;
     color: #495057;
 }
 
 .table-custom th {
     background-color: #2d3142;
-    color: #ffffff;
+    color: #fff;
     font-weight: 600;
 }
 
 .table-custom td {
-    background-color: #ffffff;
+    background-color: #fff;
     border-bottom: 1px solid #f1f3f5;
 }
 
@@ -141,7 +150,7 @@ html, body {
     background-color: #f6f9fc;
 }
 
-/* Loading Spinner */
+/* 
 #loadingSpinner {
     display: none;
     opacity: 0;
@@ -153,4 +162,4 @@ html, body {
 #loadingSpinner.show {
     display: block;
     opacity: 1;
-}
+} */

@@ -1,11 +1,14 @@
 // routes/index.js
-
 const express = require("express");
-const { isValidURL, getTopNWords } = require("../utils/helpers");
+const { getTopNWords } = require("../utils/helpers");
 const axios = require("axios");
 const logger = require("../config/logger");
 
 const router = express.Router();
+
+function generatePaginationUrl(url, n, page, limit) {
+  return `/results?url=${encodeURIComponent(url)}&n=${n}&page=${page}&limit=${limit}`;
+}
 
 // GET route to render the form initially
 router.get("/", (req, res) => {
@@ -23,13 +26,7 @@ router.get("/", (req, res) => {
 router.post("/top-words", async (req, res) => {
   const { url, n, page = 1, limit = 10 } = req.body;
   const errors = [];
-  const topN = parseInt(n, 10)  ;
-
-  // URL Validation
-  const urlIsValid = await isValidURL(url);
-  if (!urlIsValid) {
-    errors.push("Invalid URL. The URL must not point to internal or restricted resources.");
-  }
+  const topN = parseInt(n, 10);
 
   // Validate `n`
   if (isNaN(topN) || topN < 1 || topN > 100) {
@@ -48,18 +45,12 @@ router.post("/top-words", async (req, res) => {
 
 // GET route to display results with pagination
 router.get("/results", async (req, res) => {
-  console.log("GET /results accessed with query:", req.query);
   const { url, n, page = 1, limit = 10 } = req.query;
   const errors = [];
   
   const topN = parseInt(n, 10) || 10;
   const parsedPage = parseInt(page, 10) || 1;
   const parsedLimit = parseInt(limit, 10) || 10;
-
-  const urlIsValid = await isValidURL(url);
-  if (!urlIsValid) {
-    errors.push("Invalid URL. The URL must not point to internal or restricted resources.");
-  }
 
   if (isNaN(topN) || topN < 1 || topN > 100) {
     errors.push("N must be an integer between 1 and 100.");
@@ -79,12 +70,6 @@ router.get("/results", async (req, res) => {
     const paginatedWords = allWords.slice(startIndex, startIndex + parsedLimit);
 
     const totalPages = Math.ceil(allWords.length / parsedLimit);
-    console.log(`Total Pages: ${totalPages}, Requested Page: ${parsedPage}`);
-
-    if (parsedPage > totalPages && totalPages > 0) {
-      req.flash("error", "Requested page exceeds total pages.");
-      return res.redirect("/");
-    }
 
     if (parsedPage > totalPages && totalPages > 0) {
       req.flash("error", "Requested page exceeds total pages.");
@@ -95,14 +80,21 @@ router.get("/results", async (req, res) => {
       req.flash("error", "No results found.");
       return res.redirect("/");
     }
-    
+
+    // Calculate display indices for current range
+    const startIndexDisplay = startIndex + 1;
+    const endIndexDisplay = Math.min(startIndex + parsedLimit, allWords.length);
+
     res.render("index", {
       words: paginatedWords,
       url,
       n: topN,
       currentPage: parsedPage,
       totalPages,
-      limit: parsedLimit
+      limit: parsedLimit,
+      startIndexDisplay,
+      endIndexDisplay,
+      generatePaginationUrl: (pageNumber) => generatePaginationUrl(url, topN, pageNumber, parsedLimit)
     });
   } catch (error) {
     logger.error(`Error processing URL: ${error.message}`);

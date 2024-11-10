@@ -1,105 +1,46 @@
-const dns = require("dns").promises;
-const net = require("net");
-const validator = require("validator");
-
 const cheerio = require("cheerio");
-const stopword = require("stopword");
-const fs = require("fs");
+const { Heap } = require("heap-js");
 
 /**
- * Checks if the given IP address is private.
- * @param {string} ip - IP address to check.
- * @returns {boolean} - True if the IP is private, false otherwise.
- */
-function isPrivateIP(ip) {
-  return (
-    /^10\./.test(ip) || // 10.0.0.0 - 10.255.255.255
-    /^172\.(1[6-9]|2\d|3[01])\./.test(ip) || // 172.16.0.0 - 172.31.255.255
-    /^192\.168\./.test(ip) || // 192.168.0.0 - 192.168.255.255
-    /^127\./.test(ip) || // Loopback
-    /^::1$/.test(ip) || // IPv6 Loopback
-    /^fc00:/i.test(ip) || // IPv6 Private Range
-    /^fe80:/i.test(ip) // IPv6 Link-Local
-  );
-}
-
-/**
- * Validates if the provided URL is public and accessible.
- * @param {string} url - URL to validate.
- * @returns {Promise<boolean>} - True if URL is valid and public, false otherwise.
- */
-async function isValidURL(url) {
-  if (
-    !validator.isURL(url, {
-      protocols: ["http", "https"],
-      require_protocol: true,
-    })
-  ) {
-    return false;
-  }
-
-  try {
-    const hostname = new URL(url).hostname;
-    const addresses = await dns.lookup(hostname, { all: true });
-
-    // Check if any address is private
-    for (const address of addresses) {
-      if (net.isIP(address.address) && isPrivateIP(address.address)) {
-        return false;
-      }
-    }
-    return true;
-  } catch (error) {
-    console.error("Error during URL validation:", error);
-    return false;
-  }
-}
-
-/**
- * Extracts and processes the top N words from HTML content.
- * @param {string} html - The HTML content to process.
- * @param {number} topN - The number of top words to return.
- * @returns {Array} - Array of objects containing words and their frequencies.
+ * Extracts the top N words from HTML content.
+ * @param {string} html - HTML content to process.
+ * @param {number} topN - Number of top words to return.
+ * @returns {Array} - Array of word-frequency objects.
  */
 function getTopNWords(html, topN) {
   const $ = cheerio.load(html);
+  $("script, style").remove(); // Remove unwanted tags
 
-  // Remove script and style tags and any inline styles
-  $("script, style").remove();
-  const cleanText = $("body").text();
-
-  // Convert text to lowercase and remove punctuation and special characters
-  const words = cleanText
+  const text = $("body").text();
+  const words = text
     .replace(/[\W_]+/g, " ") // Remove punctuation and special characters
-    .toLowerCase() // Convert to lowercase
-    .split(/\s+/) // Split into words
-    .filter((word) => word.length > 0); // Remove empty strings
-
-  // Remove stopwords
-  const filteredWords = stopword.removeStopwords(words);
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w); // Filter out empty strings
 
   // Count word frequencies
-  const frequencyMap = {};
-  filteredWords.forEach((word) => {
-    if (word) {
-      frequencyMap[word] = (frequencyMap[word] || 0) + 1;
-    }
+  const freq = {};
+  words.forEach((w) => {
+    freq[w] = (freq[w] || 0) + 1;
   });
 
-  // Convert frequency map to array and sort by frequency
-  const topWords = Object.entries(frequencyMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, topN)
-    .map(([word, frequency]) => ({ word, freq: frequency }));
+  // Min Heap for top N words
+  const heap = new Heap((a, b) => a.freq - b.freq);
 
-  // Save cleaned text for debugging purposes (optional)
-  fs.writeFileSync("sample.txt", cleanText, (err) => {
-    if (err) {
-      console.error("Error writing to file:", err.message);
+  for (const [word, count] of Object.entries(freq)) {
+    if (heap.size() < topN) {
+      heap.push({ word, freq: count });
+    } else if (count > heap.peek().freq) {
+      heap.replace({ word, freq: count });
     }
-  });
+  }
 
-  return topWords;
+  const topWords = [];
+  while (!heap.isEmpty()) {
+    topWords.push(heap.pop());
+  }
+
+  return topWords.reverse(); 
 }
 
-module.exports = { isPrivateIP, isValidURL, getTopNWords };
+module.exports = { getTopNWords };

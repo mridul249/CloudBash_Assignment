@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 // Setting up session middleware for flash messages
 app.use(
   session({
-    secret: "yourSecretKey", // Replace with a strong secret in production
+    secret: "yourSecretKey", 
     resave: false,
     saveUninitialized: true,
   })
@@ -34,6 +34,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
@@ -52,10 +53,10 @@ app.use((req, res, next) => {
 // Use Routes
 app.use("/", indexRoutes);
 
-// 404 Not Found Handler (should be after all routes)
+// 404 Not Found Handler (after all routes)
 app.use(notFoundHandler);
 
-// General Error Handler (should be after all middleware)
+// General Error Handler (after all middleware)
 app.use(errorHandler);
 
 app.listen(PORT, () => logger.info(`Server is running on port ${PORT}`));
