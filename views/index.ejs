@@ -1,7 +1,9 @@
 <%- include('partials/header') %>
 
-  <% function generatePaginationUrl(url, n, page, limit) { return
-    `/results?url=${encodeURIComponent(url)}&n=${n}&page=${page}&limit=${limit}`; } %>
+<% function generatePaginationUrl(url, n, page, limit) { 
+  return `/results?url=${encodeURIComponent(url)}&n=${n}&page=${page}&limit=${limit}`; 
+} %>
+
 
     <div class="page-wrap">
       <div class="container my-5">

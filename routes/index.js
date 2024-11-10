@@ -10,44 +10,45 @@ function generatePaginationUrl(url, n, page, limit) {
   return `/results?url=${encodeURIComponent(url)}&n=${n}&page=${page}&limit=${limit}`;
 }
 
-// GET route to render the form initially
+// GET route to render the initial form
 router.get("/", (req, res) => {
-  res.render("index", { 
-    words: null, 
-    url: "", 
-    n: "", 
-    currentPage: 1,  
-    totalPages: 1,   
-    limit: 10        
+  res.render("index", {
+    words: null,
+    url: "",
+    n: "",
+    currentPage: 1,
+    totalPages: 1,
+    limit: 10,
+    startIndexDisplay: 0,
+    endIndexDisplay: 0,
   });
 });
 
-// POST route to handle form submissions and errors
-router.post("/top-words", async (req, res) => {
-  const { url, n, page = 1, limit = 10 } = req.body;
+// POST route to handle form submission
+router.post("/top-words", (req, res) => {
+  const { url, n } = req.body;
   const errors = [];
+
   const topN = parseInt(n, 10);
 
-  // Validate `n`
   if (isNaN(topN) || topN < 1 || topN > 100) {
     errors.push("N must be an integer between 1 and 100.");
   }
 
   if (errors.length > 0) {
-    console.log("Validation Errors:", errors);
     req.flash("error", errors.join(" "));
     return res.redirect("/");
   }
 
-  // Redirect to the GET /results route if valid
-  return res.redirect(`/results?url=${encodeURIComponent(url)}&n=${topN}&page=${page}&limit=${limit}`);
+  // Redirect to GET /results with parameters
+  return res.redirect(generatePaginationUrl(url, topN, 1, 10));
 });
 
-// GET route to display results with pagination
+// GET route to display paginated results
 router.get("/results", async (req, res) => {
   const { url, n, page = 1, limit = 10 } = req.query;
   const errors = [];
-  
+
   const topN = parseInt(n, 10) || 10;
   const parsedPage = parseInt(page, 10) || 1;
   const parsedLimit = parseInt(limit, 10) || 10;
@@ -57,7 +58,6 @@ router.get("/results", async (req, res) => {
   }
 
   if (errors.length > 0) {
-    console.log("Validation Errors in /results:", errors);
     req.flash("error", errors.join(" "));
     return res.redirect("/");
   }
@@ -81,7 +81,6 @@ router.get("/results", async (req, res) => {
       return res.redirect("/");
     }
 
-    // Calculate display indices for current range
     const startIndexDisplay = startIndex + 1;
     const endIndexDisplay = Math.min(startIndex + parsedLimit, allWords.length);
 
@@ -94,7 +93,7 @@ router.get("/results", async (req, res) => {
       limit: parsedLimit,
       startIndexDisplay,
       endIndexDisplay,
-      generatePaginationUrl: (pageNumber) => generatePaginationUrl(url, topN, pageNumber, parsedLimit)
+      generatePaginationUrl: (pageNumber) => generatePaginationUrl(url, topN, pageNumber, parsedLimit),
     });
   } catch (error) {
     logger.error(`Error processing URL: ${error.message}`);

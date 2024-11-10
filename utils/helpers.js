@@ -9,9 +9,9 @@ const { Heap } = require("heap-js");
  */
 function getTopNWords(html, topN) {
   const $ = cheerio.load(html);
-  $("script, style").remove(); // Remove unwanted tags
+  $("script, style, link, noscript, meta").remove(); // Remove unwanted tags
 
-  const text = $("body").text();
+  const text = $.text();
   const words = text
     .replace(/[\W_]+/g, " ") // Remove punctuation and special characters
     .toLowerCase()
